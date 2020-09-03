@@ -12,4 +12,10 @@
 4. "exception"表示是使用了``throw``表达式的value。
 5. "reason"表示promise被reject的原因。
 
-## 
+## Promise A+的特性
+
+### 1. Promise的状态
+
+一个Promise必须有三种状态，pending、fulfilled、rejected
+
+
