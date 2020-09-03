@@ -18,4 +18,16 @@
 
 一个Promise必须有三种状态，pending、fulfilled、rejected
 
+1. 当处于pending状态时，只能向fulfilled或者rejected状态转变
+2. 当处于fulfilled状态时，不能再向其他状态转变，且必须有一个不能改变的value
+3. 当处于rejected状态时，不能再向其他状态转变，且必须一个reason
 
+### 2. ``then``方法
+
+一个promise必须提供一个``then``方法，用于获取当前或者最终的value或者reason
+``then``方法必须接收两个参数
+``promise.then(onFulfilled, onRjected)``
+
+1. onFulfilled和onRjected可选参数，并且是一个函数，如果不是函数则被忽略
+2. 如果onFulfilled是一个函数，它必定会在``promise``变成fulfilled状态被调用，且promise的value是它的第一个参数，并且只会被调用一次。
+3. 如果onRjected是一个函数，它必定会在``promise``变成rejected状态被调用，且promise的reason是它的第一个参数，并且只会被调用一次。
