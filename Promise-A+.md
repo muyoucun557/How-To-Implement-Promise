@@ -44,4 +44,9 @@
 
 ### Promise Resolution Procedure
 
-``Promise Resolution Procedure``是一个抽象操作，将promise对象和一个value作为输入。
+``Promise Resolution Procedure``是一个抽象操作，将promise对象和一个value作为输入,可以用``[[Resolve]](promise, x)``表示。如果``x``是thenable，并且x的行为像一个promise，可以试图让promise采用``x``的状态。否则让promise变成fulfilled状态，且``x``作为value。
+
+``[[Resolve]](promise, x)``，执行步骤如下
+
+1. 如果``promise``和``x``是同一个object，reject``promise``，且reason是一个``TypeError``。
+2. 如果``x``是一个
