@@ -49,4 +49,8 @@
 ``[[Resolve]](promise, x)``，执行步骤如下
 
 1. 如果``promise``和``x``是同一个object，reject``promise``，且reason是一个``TypeError``。
-2. 如果``x``是一个
+2. 如果``x``是一个promise
+    1. if``x``是pending状态，promise必须保持pending状态，直到``x``变成fulfilled或者rejected。
+    2. if``x``是fulfilled状态，promise必须resolve相同的value（相同的value是指x的value）。
+    3. if``x``是rejected状态，promise必须reject相同的reason。
+3. 

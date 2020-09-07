@@ -6,101 +6,83 @@ const STATE = {
 
 /**
  * 
- * @param {*} resolve 
- * @param {*} reject 
+ * @param {*} executor 
  */
 function Promise(executor) {
     this.state = STATE.PENDING;
-    this.value;
-    this.reason;
-    this.onFulfilledCallbacks = []
-    this.onRejectedCallbacks = []
+    this.value = undefined;
+    this.reason = undefined;
+    this.onFulfilledCallbacks = [];
+    this.onRejectedCallbacks = [];
 
     const self = this;
     function resolve(value) {
         self.value = value;
         self.state = STATE.FULFILLED;
-        self.onFulfilledCallbacks.forEach(callback => callback(self.value));
+        self.onFulfilledCallbacks.forEach(function(callback) {
+            callback(value);
+        });
     }
 
     function reject(reason) {
         self.reason = reason;
         self.state = STATE.REJECTED;
-        self.onRejectedCallbacks.forEach(callback => callback(self.reason));
+        self.onRejectedCallbacks.forEach(function(callback) {
+            callback(reason);
+        });
     }
 
     try {
         executor(resolve, reject);
     } catch (err) {
-        reject(err)
+        reject(err);
     }
-    
 }
+
+// 只有调用了resolve或者reject方法，才能将推动到下一步。
 
 /**
  * 
- * @param {*} resolve 
- * @param {*} reject 
+ * @param {*} didFulfill 
+ * @param {*} didReject 
  */
-Promise.prototype.then = function(onFulfilled, onRejected) {
+Promise.prototype.then = function(didFulfill, didReject) {
+    didFulfill = typeof didFulfill === 'function' ? didFulfill : function(value) { return value;};
+    didReject = typeof didReject === 'function' ? didReject : function(reason) { return reason;};
     const self = this;
-    onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : function(value) { return value; }
-    onRejected = typeof onRejected === 'function' ? onRejected : function(reason) { return reason; }
-    
-    
+    if (self.state === STATE.PENDING) {
+        return new Promise(function(resolve, reject) {
+            
+        });
+    }
+
     if (self.state === STATE.FULFILLED) {
         return new Promise(function(resolve, reject) {
             try {
-                const x = onFulfilled(self.value);
-                if (x instanceof Promise) {
-                    x.then(resolve, reject)
-                } else {
-                    resolve(x);
-                }
-            } catch(err) {
-                reject(err)
-            }
-        });
-    }
-    
-    if (self.state === STATE.REJECTED) {
-        
-        return new Promise(function(resolve, reject) {
-            try {
-                const x = onRejected(self.reason);
+                const x = didFulfill(self.value);
                 if (x instanceof Promise) {
                     x.then(resolve, reject);
                 } else {
-                    resolve(x)
+                    resolve(x);
                 }
             } catch (err) {
-                reject(err)
+                reject(err);
             }
-        })
-    }
-
-    if (self.state === STATE.PENDING) {
-        return new Promise(function(resolve, reject) {
-            self.onFulfilledCallbacks.push(function() {
-                const x = onFulfilled(self.value);
-                if (x instanceof Promise) {
-                    x.then()
-                } else {
-                    resolve(x);
-                }
-            });
-            self.onRejectedCallbacks.push(function() {
-                const x = onRejected(self.reason);
-                if (x instanceof Promise) {
-                    x.then()
-                } else {
-                    resolve(x);
-                }
-            });
         });
     }
-}
 
-Promise.prototype.catch = function(fn) {
-    return this.then(null, fn)
+    if (self.state === STATE.REJECTED) {
+        return new Promise(function(resolve, reject) {
+            try {
+                const x = didReject(self.reason);
+                if (x instanceof Promise) {
+                    x.then(resolve, reject);
+                } else {
+                    resolve(x);
+                }
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
 }
