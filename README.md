@@ -4,3 +4,5 @@ JS中或者NodeJs中，异步流程控制使用的是``回调函数``。如果�
 
 [Promise/A+官网](https://promisesaplus.com)
 [Promise/A+协议翻译](./Promise-A+.md)
+
+[实现Promise](./.Promise.js)

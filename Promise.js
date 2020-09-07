@@ -9,6 +9,9 @@ const STATE = {
  * @param {*} executor 
  */
 function Promise(executor) {
+    if (typeof executor !== 'function') {
+        throw TypeError(`expecting a function but got a ${typeof executor}`)
+    }
     this.state = STATE.PENDING;
     this.value = undefined;
     this.reason = undefined;
@@ -20,7 +23,7 @@ function Promise(executor) {
         self.value = value;
         self.state = STATE.FULFILLED;
         self.onFulfilledCallbacks.forEach(function(callback) {
-            callback(value);
+            callback();
         });
     }
 
@@ -28,7 +31,7 @@ function Promise(executor) {
         self.reason = reason;
         self.state = STATE.REJECTED;
         self.onRejectedCallbacks.forEach(function(callback) {
-            callback(reason);
+            callback();
         });
     }
 
@@ -52,7 +55,27 @@ Promise.prototype.then = function(didFulfill, didReject) {
     const self = this;
     if (self.state === STATE.PENDING) {
         return new Promise(function(resolve, reject) {
-            
+            self.onFulfilledCallbacks.push(function() {
+                const x = didFulfill(self.value);
+                if (x instanceof Promise) {
+                    x.then(resolve, reject);
+                } else {
+                    resolve(x);
+                }
+            })
+
+            self.onRejectedCallbacks.push(function() {
+                try {
+                    const x = didReject(self.reason);
+                    if (x instanceof Promise) {
+                        x.then(resolve, reject);
+                    } else {
+                        resolve(x);
+                    }
+                } catch (err) {
+                    reject(err);
+                }
+            })
         });
     }
 

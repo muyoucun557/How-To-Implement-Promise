@@ -53,4 +53,12 @@
     1. if``x``是pending状态，promise必须保持pending状态，直到``x``变成fulfilled或者rejected。
     2. if``x``是fulfilled状态，promise必须resolve相同的value（相同的value是指x的value）。
     3. if``x``是rejected状态，promise必须reject相同的reason。
-3. 
+3. 如果``x``是一个object或者function
+    1. 让``then``变成``x.then``
+    2. 如果``x.then``抛出一个异常，reject promise，且reason是这个异常
+    3. 如果``then``是一个function，``x``作为调用它的this值，第一个参数是``resolvePromise``，第二个参数是``rejectPromise``
+        1. 如果调用了``resolvePromise``，且参数是y，则执行``[[Resolve]](promise, y)``
+        2. 如果调用了``rejectPrromise``，且参数是r，则reject promise，reason是r
+        3. 如果``resolvePromise``和``rejectPromise``都被调用了，则先调用的生效，后调用的被忽略
+        4. 如果调用``then``方法抛出了异常。在这种情况下，``resolvePromise``或者``rejectPromise``被先调用了，忽略这个异常；如果没有被调用，则reject promise ，reason是这个异常
+4. 如果x不是object和function，fulfilled promise，value是x。
