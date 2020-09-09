@@ -10,8 +10,13 @@ const STATE = {
  */
 function Promise(executor) {
     if (typeof executor !== 'function') {
-        throw TypeError(`expecting a function but got a ${typeof executor}`)
+        throw new TypeError(`expecting a function but got a ${typeof executor}`)
     }
+
+    if (this.constructor !== Promise) {
+        throw new TypeError(`the promise constructor cannot be invoke`)
+    }
+
     this.state = STATE.PENDING;
     this.value = undefined;
     this.reason = undefined;
@@ -54,19 +59,30 @@ Promise.prototype.then = function(didFulfill, didReject) {
     didReject = typeof didReject === 'function' ? didReject : function(reason) { return reason;};
     const self = this;
     if (self.state === STATE.PENDING) {
-        return new Promise(function(resolve, reject) {
+        const p =  new Promise(function(resolve, reject) {
             self.onFulfilledCallbacks.push(function() {
-                const x = didFulfill(self.value);
-                if (x instanceof Promise) {
-                    x.then(resolve, reject);
-                } else {
-                    resolve(x);
+                try {
+                    const x = didFulfill(self.value);
+                    if (x === p) {
+                        throw new TypeError('circular promise resolution chain')
+                    }
+                    if (x instanceof Promise) {
+                        x.then(resolve, reject);
+                    } else {
+                        resolve(x);
+                    }
+                } catch (err) {
+                    reject(err)
                 }
+                
             })
 
             self.onRejectedCallbacks.push(function() {
                 try {
                     const x = didReject(self.reason);
+                    if (x === p) {
+                        throw new TypeError('circular promise resolution chain')
+                    }
                     if (x instanceof Promise) {
                         x.then(resolve, reject);
                     } else {
@@ -84,7 +100,7 @@ Promise.prototype.then = function(didFulfill, didReject) {
             try {
                 const x = didFulfill(self.value);
                 if (x === p) {
-                  throw new TypeError('')
+                  throw new TypeError('circular promise resolution chain')
                 }
                 if (x instanceof Promise) {
                     x.then(resolve, reject);
@@ -98,9 +114,12 @@ Promise.prototype.then = function(didFulfill, didReject) {
     }
 
     if (self.state === STATE.REJECTED) {
-        return new Promise(function(resolve, reject) {
+        const p =  new Promise(function(resolve, reject) {
             try {
                 const x = didReject(self.reason);
+                if (x === p) {
+                    throw new TypeError('circular promise resolution chain')
+                }
                 if (x instanceof Promise) {
                     x.then(resolve, reject);
                 } else {
