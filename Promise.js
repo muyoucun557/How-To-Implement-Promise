@@ -80,9 +80,12 @@ Promise.prototype.then = function(didFulfill, didReject) {
     }
 
     if (self.state === STATE.FULFILLED) {
-        return new Promise(function(resolve, reject) {
+        const p = new Promise(function(resolve, reject) {
             try {
                 const x = didFulfill(self.value);
+                if (x === p) {
+                  throw new TypeError('')
+                }
                 if (x instanceof Promise) {
                     x.then(resolve, reject);
                 } else {
